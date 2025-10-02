@@ -1,9 +1,14 @@
 apiVersion: tekton.dev/v1beta1
-kind: task
-name: cleanup
+kind: Task
+metadata:
+  name: cleanup
 spec: 
-  workspace:
-    name: source
+  workspaces:
+    - name: source
+  params:
+    - name: args
+      type: string
+      default: ""
 
   steps:
     - name: remove
@@ -11,11 +16,12 @@ spec:
       env:
         - name: WORKSPACE_SOURCE_PATH
           value: $(workspaces.source.path)
-          workingDir: $(workspaces.source.path)
+          
       securityContext:
         runAsNonRoot: false
         runAsUser: 0
       script: | 
+              cd $(workspaces.source.path)
               set -eu
               echo "Removing all files from ${WORKSPACE_SOURCE_PATH} ..."
               # Delete any existing contents of the directory if it exists.
@@ -30,12 +36,13 @@ spec:
                 # Delete files and directories starting with .. plus any other character
                 rm -rf "${WORKSPACE_SOURCE_PATH}"/..?*
               fi
-      - name: nose
-        image: python:3.9-slim
-        workingDir: $(worspaces.source.path)
-        script: |
+    - name: nose
+      image: python:3.9-slim
+      
+      script: |
          #!/bin/bash
           set -e
+          cd $(workspaces.source.path)
           python -m pip install --upgrade pip wheel
           pip install -r requirements.txt
           nosetests $(params.args)
