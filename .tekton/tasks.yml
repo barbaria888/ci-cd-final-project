@@ -9,7 +9,6 @@ spec:
     - name: args
       type: string
       default: ""
-
   steps:
     - name: remove
       image: alpine:3
